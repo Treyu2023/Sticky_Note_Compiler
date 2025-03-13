@@ -1,0 +1,18 @@
+{
+  "theme": "light",
+  "defaultSortOrder": "date-desc",
+  "sidebarExpanded": true,
+  "notesPerPage": 20,
+  "autoSave": true,
+  "fontSize": "medium",
+  "defaultView": "grid",
+  "refreshInterval": 60,
+  "notifications": {
+    "enabled": true,
+    "sound": true,
+    "desktop": true
+  },
+  "keyboard_shortcuts": {
+    "enabled": true
+  }
+}

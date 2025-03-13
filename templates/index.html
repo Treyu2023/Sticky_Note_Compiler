@@ -1,0 +1,1290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sticky Notes Manager</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #4a6fa5;
+            --secondary-color: #166088;
+            --accent-color: #4fc08d;
+            --background-color: #f8f9fa;
+            --card-color: #ffffff;
+            --text-color: #333333;
+            --text-secondary: #666666;
+            --border-color: #e0e0e0;
+            --shadow: 0 2px 5px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+
+        .shortcuts-modal-footer {
+            text-align: right;
+            margin-top: 15px;
+        }
+
+        .dark-mode {
+            --primary-color: #345682;
+            --secondary-color: #1a4a6e;
+            --accent-color: #3aa978;
+            --background-color: #121212;
+            --card-color: #1e1e1e;
+            --text-color: #f0f0f0;
+            --text-secondary: #aaaaaa;
+            --border-color: #444444;
+            --shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            transition: var(--transition);
+        }
+
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            display: grid;
+            grid-template-columns: 250px 1fr;
+            grid-template-areas: "sidebar main";
+            min-height: 100vh;
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 20px;
+            box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+            position: relative;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            margin-bottom: 30px;
+            font-weight: bold;
+            font-size: 1.5rem;
+        }
+
+        .logo i {
+            margin-right: 10px;
+            font-size: 1.8rem;
+        }
+
+        .nav-item {
+            padding: 12px 15px;
+            margin-bottom: 5px;
+            border-radius: 5px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            color: rgba(255,255,255,0.9);
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .nav-item.active {
+            background-color: rgba(255,255,255,0.2);
+            font-weight: bold;
+        }
+
+        .nav-item i {
+            margin-right: 10px;
+        }
+
+        .main-content {
+            grid-area: main;
+            padding: 30px;
+            overflow-y: auto;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            font-weight: 600;
+            font-size: 2rem;
+        }
+
+        .toolbar {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: inline-flex;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .btn i {
+            margin-right: 5px;
+        }
+
+        .btn:hover {
+            background-color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: var(--text-secondary);
+        }
+
+        .btn-accent {
+            background-color: var(--accent-color);
+        }
+
+        .filters {
+            background-color: var(--card-color);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: var(--shadow);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        input[type="text"] {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: var(--card-color);
+            min-width: 200px;
+        }
+
+        select {
+            padding: 10px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            color: var(--text-color);
+            background-color: var(--card-color);
+            cursor: pointer;
+            min-width: 150px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .error {
+            color: #e74c3c;
+            background-color: #fadbd8;
+            padding: 10px 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .results-header h2 {
+            color: var(--secondary-color);
+        }
+
+        .sort-options {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .sort-options label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .stats {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .site-group {
+            margin-bottom: 25px;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .site-header {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .site-header:hover {
+            background-color: var(--secondary-color);
+        }
+
+        .site-header h3 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .site-content {
+            background-color: var(--card-color);
+            max-height: 1000px;
+            overflow: hidden;
+            transition: max-height 0.5s ease;
+        }
+
+        .site-content.collapsed {
+            max-height: 0;
+        }
+
+        .notes-container {
+            padding: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px;
+        }
+
+        .note {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .note:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .note-content {
+            margin-bottom: 20px;
+            color: var(--text-color);
+            word-wrap: break-word;
+        }
+
+        .note-footer {
+            display: flex;
+            justify-content: space-between;
+            border-top: 1px solid var(--border-color);
+            padding-top: 10px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .note-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .note-actions i {
+            cursor: pointer;
+            color: var(--text-secondary);
+        }
+
+        .note-actions i:hover {
+            color: var(--primary-color);
+        }
+
+        .toggle-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+        }
+
+        .toggle-theme {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        .toggle-theme:hover {
+            transform: scale(1.1);
+        }
+
+        @media (max-width: 768px) {
+            body {
+                grid-template-columns: 1fr;
+                grid-template-areas: "main";
+            }
+            
+            .sidebar {
+                display: none;
+            }
+            
+            .notes-container {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.3s forwards;
+        }
+        
+        /* Loading indicator */
+        .loader {
+            border: 4px solid rgba(255,255,255,0.3);
+            border-top: 4px solid var(--accent-color);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* Tooltips */
+        [data-tooltip] {
+            position: relative;
+            cursor: help;
+        }
+        
+        [data-tooltip]:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--text-color);
+            color: var(--background-color);
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
+        
+        /* Keyboard shortcut hints */
+        .shortcut-hint {
+            display: inline-block;
+            background-color: var(--border-color);
+            color: var(--text-secondary);
+            font-size: 0.7rem;
+            padding: 2px 5px;
+            border-radius: 3px;
+            margin-left: 5px;
+            font-family: monospace;
+        }
+        
+        .keyboard-shortcuts-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        
+        .keyboard-shortcuts-modal.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+        
+        .keyboard-shortcuts-content {
+            background-color: var(--card-color);
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+            padding: 20px;
+            width: 80%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .shortcuts-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .shortcuts-table td, .shortcuts-table th {
+            padding: 8px 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .shortcuts-table th {
+            color: var(--secondary-color);
+        }
+        
+        .shortcuts-table tr:last-child td {
+            border-bottom: none;
+        }
+        
+        .key {
+            display: inline-block;
+            background-color: var(--border-color);
+            color: var(--text-color);
+            border-radius: 3px;
+            padding: 2px 6px;
+            margin: 0 2px;
+            font-family: monospace;
+        }
+        
+        /* Quick Action Bar */
+        .quick-action-bar {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: var(--card-color);
+            border-radius: 30px;
+            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.2);
+            display: flex;
+            padding: 8px 15px;
+            z-index: 90;
+            transition: all 0.3s ease;
+        }
+        
+        .quick-action-bar:hover {
+            transform: translateX(-50%) translateY(-5px);
+        }
+        
+        .quick-action {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 0 5px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            transition: all 0.2s ease;
+        }
+        
+        .quick-action:hover {
+            background-color: var(--accent-color);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        /* Onboarding tour */
+        .tour-highlight {
+            position: relative;
+            z-index: 1000;
+        }
+        
+        .tour-highlight::after {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border: 2px solid var(--accent-color);
+            border-radius: 5px;
+            animation: pulse 1.5s infinite;
+            pointer-events: none;
+            z-index: -1;
+        }
+        
+        .tour-tooltip {
+            position: absolute;
+            background-color: var(--accent-color);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: var(--shadow);
+            max-width: 300px;
+            z-index: 1001;
+        }
+        
+        .tour-tooltip h4 {
+            margin-top: 0;
+            margin-bottom: 10px;
+        }
+        
+        .tour-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        /* User status feedback */
+        .status-toast {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--card-color);
+            color: var(--text-color);
+            padding: 12px 20px;
+            border-radius: 5px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.3s ease;
+            display: flex;
+            align-items: center;
+        }
+        
+        .status-toast.visible {
+            transform: translateX(0);
+        }
+        
+        .status-toast i {
+            margin-right: 10px;
+            font-size: 1.2rem;
+        }
+        
+        .status-toast.success {
+            border-left: 4px solid var(--accent-color);
+        }
+        
+        .status-toast.error {
+            border-left: 4px solid #e74c3c;
+        }
+        
+        .status-toast.info {
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        /* Note equipment styling */
+        .note-equipment {
+            margin-bottom: 10px;
+        }
+        
+        .equipment-tag {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: white;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="logo">
+            <i class="fas fa-sticky-note"></i>
+            <span>StickyManager</span>
+        </div>
+        <nav>
+            <div class="nav-item active">
+                <i class="fas fa-search"></i>
+                <span>Search Notes</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-plus"></i>
+                <span>Create Note</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-folder"></i>
+                <span>All Sites</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-star"></i>
+                <span>Favorites</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-chart-bar"></i>
+                <span>Statistics</span>
+            </div>
+            <div class="nav-item">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="main-content">
+        <div class="header">
+            <h1>Search Sticky Notes</h1>
+            <div class="toolbar">
+                <button class="btn" id="export-btn">
+                    <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-accent">
+                    <i class="fas fa-plus"></i> New Note
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Filters -->
+        <form method="post" class="filters">
+            <input type="text" name="search" placeholder="Enter search term" value="{{ search_query }}" autofocus>
+            
+            <label for="site_filter">Site Filter:</label>
+            <select name="site_filter" id="site_filter">
+                <option value="">All Sites</option>
+                {% for site in sites %}
+                    <option value="{{ site }}" {% if site_filter == site %}selected{% endif %}>{{ site }}</option>
+                {% endfor %}
+            </select>
+            
+            <label for="date_filter">Date Filter:</label>
+            <select name="date_filter" id="date_filter">
+                <option value="">Any Date</option>
+                <option value="today">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+            </select>
+            
+            <div class="filter-buttons">
+                <button type="submit" class="btn">
+                    <i class="fas fa-search"></i> Search
+                </button>
+                {% if search_query or site_filter %}
+                    <a href="/" class="btn btn-secondary">
+                        <i class="fas fa-times"></i> Clear
+                    </a>
+                {% endif %}
+            </div>
+        </form>
+        
+        <!-- Error Message -->
+        {% if error %}
+            <p class="error"><i class="fas fa-exclamation-circle"></i> {{ error }}</p>
+        {% endif %}
+        
+        <!-- Results Header -->
+        <div class="results-header">
+            <h2>Results {% if search_query %}for "{{ search_query }}"{% endif %} {% if site_filter %}on {{ site_filter }}{% endif %}</h2>
+            
+            <div class="sort-options">
+                <label for="sort">Sort by:</label>
+                <select id="sort" onchange="sortNotes(this.value)">
+                    <option value="relevance">Relevance</option>
+                    <option value="date-desc">Newest First</option>
+                    <option value="date-asc">Oldest First</option>
+                    <option value="alpha">Alphabetical</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        {% if total_notes > 0 %}
+            <p class="stats">
+                <i class="fas fa-info-circle"></i> Found {{ total_notes }} notes across {{ unique_sites }} sites
+            </p>
+        {% endif %}
+        
+        <!-- Site Groups -->
+        {% for site, site_notes in grouped_notes.items() %}
+            <div class="site-group" data-site="{{ site }}">
+                <div class="site-header" onclick="toggleSiteContent('site-{{ loop.index }}')">
+                    <h3>
+                        <span><i class="fas fa-globe"></i> {{ site }} ({{ site_notes|length }} notes)</span>
+                        <span class="collapse-icon" id="site-{{ loop.index }}-icon">▲</span>
+                    </h3>
+                </div>
+                <div class="site-content" id="site-{{ loop.index }}">
+                    <div class="notes-container">
+                        {% for note in site_notes %}
+                            <div class="note" data-date="{{ note.date if note.date else '' }}">
+                                <div class="note-content">
+                                    {% if note.equipment %}
+                                    <div class="note-equipment">
+                                        <span class="equipment-tag">{{ note.equipment }}</span>
+                                    </div>
+                                    {% endif %}
+                                    {{ note.content }}
+                                </div>
+                                <div class="note-footer">
+                                    <span>{{ note.date if note.date else 'No date' }}</span>
+                                    <div class="note-actions">
+                                        <i class="fas fa-copy" onclick="copyToClipboard(this)" data-tooltip="Copy to clipboard"></i>
+                                        <i class="fas fa-star" onclick="toggleFavorite(this)" data-tooltip="Add to favorites"></i>
+                                        <i class="fas fa-edit" data-tooltip="Edit note"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <div class="no-results">
+                <p>No sticky notes found. Try adjusting your search criteria.</p>
+            </div>
+        {% endfor %}
+        
+        <!-- Quick Action Bar -->
+        <div class="quick-action-bar">
+            <div class="quick-action" title="New Note (N)" onclick="createNewNote()">
+                <i class="fas fa-plus"></i>
+            </div>
+            <div class="quick-action" title="Search (Ctrl+/)" onclick="focusSearch()">
+                <i class="fas fa-search"></i>
+            </div>
+            <div class="quick-action" title="Show Keyboard Shortcuts (?)">
+                <i class="fas fa-keyboard" onclick="toggleShortcutsModal()"></i>
+            </div>
+            <div class="quick-action" title="Toggle Dark Mode (D)" onclick="document.getElementById('theme-toggle').click()">
+                <i class="fas fa-adjust"></i>
+            </div>
+            <div class="quick-action" title="Onboarding Tour" onclick="startTour()">
+                <i class="fas fa-question-circle"></i>
+            </div>
+        </div>
+        
+        <!-- Status toast for user feedback -->
+        <div class="status-toast" id="status-toast">
+            <i class="fas fa-info-circle"></i>
+            <span id="toast-message">Operation completed successfully</span>
+        </div>
+        
+        <!-- Keyboard Shortcuts Modal -->
+        <div class="keyboard-shortcuts-modal" id="shortcuts-modal">
+            <div class="keyboard-shortcuts-content">
+                <h3>Keyboard Shortcuts</h3>
+                <table class="shortcuts-table">
+                    <tr>
+                        <th>Action</th>
+                        <th>Shortcut</th>
+                    </tr>
+                    <tr>
+                        <td>Focus search</td>
+                        <td><span class="key">Ctrl</span> + <span class="key">/</span></td>
+                    </tr>
+                    <tr>
+                        <td>Create new note</td>
+                        <td><span class="key">N</span></td>
+                    </tr>
+                    <tr>
+                        <td>Toggle dark mode</td>
+                        <td><span class="key">D</span></td>
+                    </tr>
+                    <tr>
+                        <td>Show shortcuts</td>
+                        <td><span class="key">?</span></td>
+                    </tr>
+                    <tr>
+                        <td>Close modals</td>
+                        <td><span class="key">Esc</span></td>
+                    </tr>
+                    <tr>
+                        <td>Navigate sites</td>
+                        <td><span class="key">↑</span> <span class="key">↓</span></td>
+                    </tr>
+                </table>
+                <div class="shortcuts-modal-footer">
+                    <button class="btn" onclick="toggleShortcutsModal()">Close</button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Dark Mode Toggle -->
+        <div class="toggle-container">
+            <button class="toggle-theme" id="theme-toggle" title="Toggle Dark Mode">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // Toggle site content visibility
+        function toggleSiteContent(siteId) {
+            const content = document.getElementById(siteId);
+            const isCollapsed = content.classList.toggle('collapsed');
+            
+            const icon = document.getElementById(siteId + '-icon');
+            icon.textContent = isCollapsed ? '▼' : '▲';
+        }
+        
+        // Copy note content to clipboard
+        function copyToClipboard(element) {
+            const noteContent = element.closest('.note').querySelector('.note-content').textContent;
+            navigator.clipboard.writeText(noteContent).then(() => {
+                // Show brief success animation
+                element.classList.add('fa-check');
+                element.classList.remove('fa-copy');
+                setTimeout(() => {
+                    element.classList.add('fa-copy');
+                    element.classList.remove('fa-check');
+                }, 1500);
+            });
+        }
+        
+        // Toggle favorite status with persistence
+        function toggleFavorite(element) {
+            element.classList.toggle('fa-star');
+            element.classList.toggle('fa-star-half');
+            
+            // Change color when favorited
+            if (element.classList.contains('fa-star-half')) {
+                element.style.color = '#f39c12';
+                
+                // Save the favorite status
+                const noteContent = element.closest('.note').querySelector('.note-content').textContent;
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                
+                // Add to favorites if not already there
+                if (!favorites.includes(noteContent)) {
+                    favorites.push(noteContent);
+                    localStorage.setItem('favorites', JSON.stringify(favorites));
+                    showToast('Added to favorites', 'success');
+                }
+            } else {
+                element.style.color = '';
+                
+                // Remove from favorites
+                const noteContent = element.closest('.note').querySelector('.note-content').textContent;
+                const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+                const updatedFavorites = favorites.filter(fav => fav !== noteContent);
+                localStorage.setItem('favorites', JSON.stringify(updatedFavorites));
+                showToast('Removed from favorites', 'info');
+            }
+        }
+        
+        // Sort notes
+        function sortNotes(sortBy) {
+            const siteGroups = document.querySelectorAll('.site-group');
+            
+            siteGroups.forEach(group => {
+                const notesContainer = group.querySelector('.notes-container');
+                const notes = Array.from(notesContainer.querySelectorAll('.note'));
+                
+                notes.sort((a, b) => {
+                    if (sortBy === 'date-desc') {
+                        return new Date(b.dataset.date || 0) - new Date(a.dataset.date || 0);
+                    } else if (sortBy === 'date-asc') {
+                        return new Date(a.dataset.date || 0) - new Date(b.dataset.date || 0);
+                    } else if (sortBy === 'alpha') {
+                        return a.querySelector('.note-content').textContent.localeCompare(
+                            b.querySelector('.note-content').textContent
+                        );
+                    }
+                    return 0; // Default is relevance, no change
+                });
+                
+                // Clear and re-append sorted notes
+                while (notesContainer.firstChild) {
+                    notesContainer.removeChild(notesContainer.firstChild);
+                }
+                
+                notes.forEach(note => {
+                    notesContainer.appendChild(note);
+                });
+            });
+        }
+        
+        // Dark mode toggle
+        document.getElementById('theme-toggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            
+            if (document.body.classList.contains('dark-mode')) {
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+                localStorage.setItem('theme', 'dark');
+            } else {
+                icon.classList.remove('fa-sun');
+                icon.classList.add('fa-moon');
+                localStorage.setItem('theme', 'light');
+            }
+        });
+        
+        // Apply saved theme preference
+        document.addEventListener('DOMContentLoaded', function() {
+            if (localStorage.getItem('theme') === 'dark') {
+                document.body.classList.add('dark-mode');
+                document.querySelector('#theme-toggle i').classList.replace('fa-moon', 'fa-sun');
+            }
+            
+            // Add animation to the newly loaded elements
+            setTimeout(() => {
+                document.querySelectorAll('.site-group').forEach((group, index) => {
+                    group.style.animationDelay = (index * 0.1) + 's';
+                });
+            }, 100);
+        });
+        
+        // Export functionality
+        document.getElementById('export-btn').addEventListener('click', function() {
+            const dropdown = document.createElement('div');
+            dropdown.className = 'export-dropdown';
+            dropdown.style = `
+                position: absolute;
+                background: var(--card-color);
+                border: 1px solid var(--border-color);
+                border-radius: 5px;
+                box-shadow: var(--shadow);
+                padding: 10px;
+                z-index: 100;
+            `;
+            
+            const options = ['PDF', 'CSV', 'JSON'];
+            options.forEach(opt => {
+                const option = document.createElement('div');
+                option.textContent = `Export as ${opt}`;
+                option.style = `
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    border-radius: 3px;
+                `;
+                option.addEventListener('mouseover', () => {
+                    option.style.backgroundColor = 'var(--border-color)';
+                });
+                option.addEventListener('mouseout', () => {
+                    option.style.backgroundColor = '';
+                });
+                dropdown.appendChild(option);
+            });
+            
+            this.parentNode.appendChild(dropdown);
+            
+            // Close dropdown when clicking elsewhere
+            document.addEventListener('click', function closeDropdown(e) {
+                if (!dropdown.contains(e.target) && e.target !== document.getElementById('export-btn')) {
+                    dropdown.remove();
+                    document.removeEventListener('click', closeDropdown);
+                }
+            });
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Don't trigger shortcuts when typing in inputs
+            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT') {
+                return;
+            }
+            
+            // Ctrl + / to focus search
+            if (e.ctrlKey && e.key === '/') {
+                e.preventDefault();
+                focusSearch();
+            }
+            
+            // N to create new note
+            if (e.key === 'n' || e.key === 'N') {
+                e.preventDefault();
+                createNewNote();
+            }
+            
+            // D to toggle dark mode
+            if (e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
+                document.getElementById('theme-toggle').click();
+            }
+            
+            // ? to show keyboard shortcuts
+            if (e.key === '?') {
+                e.preventDefault();
+                toggleShortcutsModal();
+            }
+            
+            // Escape to close modals
+            if (e.key === 'Escape') {
+                closeAllModals();
+            }
+        });
+        
+        function focusSearch() {
+            document.querySelector('input[name="search"]').focus();
+            showToast('Search focused', 'info');
+        }
+        
+        function createNewNote() {
+            // This would be connected to your new note functionality
+            showToast('Creating new note...', 'info');
+            // For demo purposes:
+            setTimeout(() => {
+                showToast('New note created!', 'success');
+            }, 1000);
+        }
+        
+        function toggleShortcutsModal() {
+            const modal = document.getElementById('shortcuts-modal');
+            modal.classList.toggle('visible');
+        }
+        
+        function closeAllModals() {
+            document.getElementById('shortcuts-modal').classList.remove('visible');
+            // Close any other modals here
+        }
+        
+        // User feedback toast
+        function showToast(message, type = 'info') {
+            const toast = document.getElementById('status-toast');
+            const icon = toast.querySelector('i');
+            
+            // Update icon based on type
+            icon.className = 'fas';
+            if (type === 'success') {
+                icon.className += ' fa-check-circle';
+                toast.className = 'status-toast success';
+            } else if (type === 'error') {
+                icon.className += ' fa-exclamation-circle';
+                toast.className = 'status-toast error';
+            } else {
+                icon.className += ' fa-info-circle';
+                toast.className = 'status-toast info';
+            }
+            
+            // Set message
+            document.getElementById('toast-message').textContent = message;
+            
+            // Show toast
+            toast.classList.add('visible');
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                toast.classList.remove('visible');
+            }, 3000);
+        }
+        
+        // Onboarding tour
+        function startTour() {
+            const steps = [
+                {
+                    element: document.querySelector('.logo'),
+                    title: 'Welcome to StickyManager!',
+                    content: 'This tour will help you get familiar with the main features.'
+                },
+                {
+                    element: document.querySelector('.filters'),
+                    title: 'Search and Filter',
+                    content: 'Find your notes quickly using search and filters.'
+                },
+                {
+                    element: document.querySelector('.site-header'),
+                    title: 'Site Groups',
+                    content: 'Notes are organized by site. Click to expand or collapse each site.'
+                },
+                {
+                    element: document.querySelector('.note'),
+                    title: 'Note Card',
+                    content: 'Each note appears as a card. Hover over it to see available actions.'
+                },
+                {
+                    element: document.querySelector('.quick-action-bar'),
+                    title: 'Quick Actions',
+                    content: 'Access common features quickly from this floating action bar.'
+                }
+            ];
+            
+            let currentStep = 0;
+            
+            function showStep(step) {
+                // Remove previous highlights
+                const previousHighlight = document.querySelector('.tour-highlight');
+                if (previousHighlight) {
+                    previousHighlight.classList.remove('tour-highlight');
+                }
+                
+                // Remove previous tooltip
+                const previousTooltip = document.querySelector('.tour-tooltip');
+                if (previousTooltip) {
+                    previousTooltip.remove();
+                }
+                
+                if (step >= steps.length) {
+                    showToast('Tour completed! Enjoy using StickyManager', 'success');
+                    return;
+                }
+                
+                const stepInfo = steps[step];
+                const element = stepInfo.element;
+                
+                // Highlight element
+                element.classList.add('tour-highlight');
+                
+                // Create tooltip
+                const tooltip = document.createElement('div');
+                tooltip.className = 'tour-tooltip';
+                tooltip.innerHTML = `
+                    <h4>${stepInfo.title}</h4>
+                    <p>${stepInfo.content}</p>
+                    <div class="tour-buttons">
+                        ${step > 0 ? '<button class="btn btn-secondary" id="prev-step">Previous</button>' : ''}
+                        ${step < steps.length - 1 ? 
+                            '<button class="btn" id="next-step">Next</button>' : 
+                            '<button class="btn" id="finish-tour">Finish</button>'
+                        }
+                    </div>
+                `;
+                
+                // Position tooltip
+                document.body.appendChild(tooltip);
+                const rect = element.getBoundingClientRect();
+                
+                // Position below element by default
+                tooltip.style.top = (rect.bottom + 10) + 'px';
+                tooltip.style.left = (rect.left + rect.width/2 - tooltip.offsetWidth/2) + 'px';
+                
+                // Adjust if off-screen
+                const tooltipRect = tooltip.getBoundingClientRect();
+                if (tooltipRect.right > window.innerWidth) {
+                    tooltip.style.left = (window.innerWidth - tooltipRect.width - 20) + 'px';
+                }
+                if (tooltipRect.left < 0) {
+                    tooltip.style.left = '20px';
+                }
+                if (tooltipRect.bottom > window.innerHeight) {
+                    tooltip.style.top = (rect.top - tooltipRect.height - 10) + 'px';
+                }
+                
+                // Add event listeners
+                if (step > 0) {
+                    document.getElementById('prev-step').addEventListener('click', () => {
+                        showStep(step - 1);
+                    });
+                }
+                
+                if (step < steps.length - 1) {
+                    document.getElementById('next-step').addEventListener('click', () => {
+                        showStep(step + 1);
+                    });
+                } else {
+                    document.getElementById('finish-tour').addEventListener('click', () => {
+                        // Remove highlight and tooltip
+                        element.classList.remove('tour-highlight');
+                        tooltip.remove();
+                        showToast('Tour completed! Enjoy using StickyManager', 'success');
+                    });
+                }
+                
+                // Ensure the element is visible
+                element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            // Start the tour
+            showStep(currentStep);
+        }
+        
+        // Progressive enhancement - check if first time user
+        document.addEventListener('DOMContentLoaded', function() {
+            // Check if first time user
+            if (!localStorage.getItem('toured')) {
+                setTimeout(() => {
+                    showToast('Welcome to StickyManager! Would you like a quick tour?', 'info');
+                    // Add tour button to toast
+                    const tourBtn = document.createElement('button');
+                    tourBtn.className = 'btn btn-accent';
+                    tourBtn.style.marginLeft = '15px';
+                    tourBtn.textContent = 'Take Tour';
+                    tourBtn.addEventListener('click', () => {
+                        startTour();
+                        document.getElementById('status-toast').classList.remove('visible');
+                    });
+                    document.getElementById('status-toast').appendChild(tourBtn);
+                }, 1500);
+                localStorage.setItem('toured', 'true');
+            }
+            
+            // Load favorites and mark them
+            const favorites = JSON.parse(localStorage.getItem('favorites') || '[]');
+            document.querySelectorAll('.note').forEach(note => {
+                const content = note.querySelector('.note-content').textContent;
+                const starIcon = note.querySelector('.fa-star');
+                
+                if (starIcon && favorites.includes(content)) {
+                    starIcon.classList.remove('fa-star');
+                    starIcon.classList.add('fa-star-half');
+                    starIcon.style.color = '#f39c12';
+                }
+            });
+        });
+        
+        // Add extract data button functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add extract data button to the toolbar
+            const toolbar = document.querySelector('.toolbar');
+            const extractButton = document.createElement('button');
+            extractButton.className = 'btn';
+            extractButton.innerHTML = '<i class="fas fa-sync-alt"></i> Extract Data';
+            extractButton.addEventListener('click', function() {
+                showToast('Extracting data...', 'info');
+                
+                fetch('/api/extract', {
+                    method: 'POST',
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showToast('Data extraction completed successfully!', 'success');
+                        // Reload the page after a short delay
+                        setTimeout(() => {
+                            location.reload();
+                        }, 1500);
+                    } else {
+                        showToast('Error: ' + data.error, 'error');
+                    }
+                })
+                .catch(error => {
+                    showToast('Error: ' + error.message, 'error');
+                });
+            });
+            
+            toolbar.appendChild(extractButton);
+        });
+    </script>
+</body>
+</html>

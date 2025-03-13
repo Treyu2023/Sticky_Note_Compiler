@@ -1,0 +1,14 @@
+[
+    {
+        "site": "Site1",
+        "equipment": "Equipment1",
+        "content": "on Equipment1. Replaced parts.",
+        "date": "2025-03-12 03:10:12"
+    },
+    {
+        "site": "Site2",
+        "equipment": "Equipment2",
+        "content": "on Equipment2. Fixed issue.",
+        "date": "2025-03-12 03:10:12"
+    }
+]
